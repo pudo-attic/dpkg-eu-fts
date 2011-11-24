@@ -6,7 +6,7 @@ from recon import company, public_body
 from recon.interactive import interactive, SQLiteMemory
 from recon.local import CSVLocalEndpoint
 
-COUNTRIES_URL = 'countries2.csv'
+COUNTRIES_URL = 'iso_3166_2_countries.csv'
 
 def integrate_countries(conn, table):
     fh = urlopen(COUNTRIES_URL)
@@ -53,9 +53,12 @@ def integrate_recon(conn, table, qfunc, src_col, dst_name_col, dst_uri_col,
             conn.commit()
 
 if __name__ == '__main__':
-    assert len(sys.argv)==2, "Usage: %s [sqlite-db]"
-    conn = sqlite3.connect(sys.argv[1])
-    #integrate_departments(conn, 'fts')
-    #integrate_companies(conn, 'fts')
-    integrate_countries(conn, 'fts')
+    assert len(sys.argv)==3, "Usage: %s {cc,dg,corp} [sqlite-db]"
+    op = sys.argv[1]
+    conn = sqlite3.connect(sys.argv[2])
+    ops = {
+        'dg': integrate_departments,
+        'corp': integrate_companies,
+        'cc': integrate_countries
+        }.get(op)(conn, 'fts'),
 
