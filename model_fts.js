@@ -1,8 +1,8 @@
 {
   "dataset": {
     "model_rev": 1,
-    "name": "ecfts",
-    "label": "EC Financial Transparency System", 
+    "name": "eu-commission-fts",
+    "label": "EU Commission Grants & Commitments", 
     "description": "All grants and commitment reported by the European Commission",
     "currency": "EUR",
     "temporal_granularity": "year"
@@ -52,14 +52,12 @@
         {"column": "post_code", "name": "post_code", "datatype": "string"},
         {"column": "country", "name": "country", "datatype": "string"},
         {"column": "geozone", "name": "geozone", "datatype": "string"},
-        {"column": "coordinator", "name": "coordinator", "datatype": "string"},
-        {"constant": "yes", "name": "fts_beneficiary", "datatype": "constant"}
+        {"column": "coordinator", "name": "coordinator", "datatype": "string"}
       ]
     },
     "action_type": {
       "label": "Action Type",
-      "type": "classifier",
-      "taxonomy": "ec-action-type",
+      "type": "compound",
       "description": "",
       "facet": true,
       "fields": [
@@ -68,8 +66,7 @@
     },
     "title": {
       "label": "Budget Title",
-      "type": "classifier",
-      "taxonomy": "eu",
+      "type": "compound",
       "description": "",
       "facet": true,
       "fields": [
@@ -145,80 +142,70 @@
       "label": "Directorate-General",
       "name": "default",
       "dimension": "dataset",
-      "breakdown": "from",
-      "filters": {"name": "ecfts"}
+      "breakdown": "from"
     },
     {
       "entity": "dataset",
       "label": "Action Type",
       "name": "action_type",
       "dimension": "dataset",
-      "breakdown": "action_type",
-      "filters": {"name": "ecfts"}
+      "breakdown": "action_type"
     },
     {
       "entity": "entity",
       "label": "Budget Article",
       "name": "default",
       "dimension": "from",
-      "breakdown": "article",
-      "filters": {"fts_department": "yes"}
+      "breakdown": "article"
     },
     {
       "entity": "entity",
       "label": "Action Type",
       "name": "action_type",
       "dimension": "from",
-      "breakdown": "action_type",
-      "filters": {"fts_department": "yes"}
+      "breakdown": "action_type"
     },
     {
       "entity": "classifier",
       "label": "Action Type",
       "name": "default",
       "dimension": "article",
-      "breakdown": "action_type",
-      "filters": {"taxonomy": "eu", "level_name": "article"}
+      "breakdown": "action_type"
     },
     {
       "entity": "classifier",
       "label": "Action Type",
       "name": "default",
       "dimension": "item",
-      "breakdown": "action_type",
-      "filters": {"taxonomy": "eu", "level_name": "item"}
+      "breakdown": "action_type"
     },
     {
       "entity": "classifier",
       "label": "Recipient Countries",
       "name": "member",
       "dimension": "article",
-      "breakdown": "country",
-      "filters": {"taxonomy": "eu", "level_name": "article"}
+      "breakdown": "country"
     },
     {
       "entity": "classifier",
       "label": "Recipient Countries",
       "name": "member",
       "dimension": "item",
-      "breakdown": "country",
-      "filters": {"taxonomy": "eu", "level_name": "item"}
+      "breakdown": "country"
     },
     {
       "entity": "classifier",
       "label": "Recipients",
       "name": "bene",
       "dimension": "article",
-      "breakdown": "to",
-      "filters": {"taxonomy": "eu", "level_name": "article"}
+      "breakdown": "to"
     },
     {
       "entity": "classifier",
       "label": "Recipients",
       "name": "bene",
       "dimension": "item",
-      "breakdown": "to",
-      "filters": {"taxonomy": "eu", "level_name": "item"}
+      "breakdown": "to"
     }
   ]
 }
