@@ -24,8 +24,11 @@ Reconciliation: EC Departments, Countries, Companies
 
 Recon stages can be run like this::
 
+  # Country codes:
   python integrate.py cc fts.db
+  # Directorates-General:
   python integrate.py dg fts.db
+  # Companies:
   python integrate.py corp fts.db
 
 Companies (corp) reconciliation may potentially take a long time and much user
@@ -37,6 +40,16 @@ EU Budget Reference Data
 
 The FTS refers to budget line items in the European budget. These can be used 
 to add context to the transaction, by adding in EU budget classifications. 
+
+Budget codes can be applied using the appropriate script::
+
+  python budget_codes.py fts.db 2011-11-22.budget_codes.txt
+
+This will also print any unknown budget code identifiers occuring in the source
+data.
+
+Regenerating the data
+'''''''''''''''''''''
 
 The required scraper and tools for the EU budget live at: https://github.com/pudo/dpkg-eu-budget
 
