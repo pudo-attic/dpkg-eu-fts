@@ -52,6 +52,75 @@ def integrate_recon(conn, table, qfunc, src_col, dst_name_col, dst_uri_col,
                     (res.name, res.uri, row[0]))
             conn.commit()
 
+from urllib import quote, urlopen
+import json
+def integrate_geocode(conn, table):
+    BASE = 'http://api.geonames.org/postalCodeSearchJSON?formatted=true&country=%s&postalcode=%s&maxRows=1&username=demo&style=full'
+    c = conn.cursor()
+    for col in ["admin1_code", "admin1_name", "admin2_code", "admin2_name",
+                "admin3_code", "admin3_name"]:
+        try:
+            c.execute("ALTER TABLE %s ADD COLUMN %s TEXT" % (table, col))
+        except: pass
+    c.execute("SELECT DISTINCT country_code, postcode FROM %s" % table)
+    for row in c:
+        if row is None:
+            break
+        #import ipdb; ipdb.set_trace()
+        if not row[0] or not row[1]:
+            continue
+        url = BASE % (quote(row[0].encode('utf-8')), 
+                      quote(row[1].encode('utf-8')))
+        data = json.load(urlopen(url))
+        print url
+        print len(data['postalCodes'])
+        if len(data['postalCodes']):
+            pc = data['postalCodes'][0]
+            conn.execute('UPDATE %s SET admin1_code = ?, admin1_name = ?, '
+                'admin2_code = ?, admin2_name = ?, admin3_code = ?, '
+                'admin3_name = ? WHERE country_code = ? AND postcode = ?' %
+                table, (pc.get('adminCode1'), pc.get('adminName1'), 
+                    pc.get('adminCode2'), pc.get('adminName2'),
+                    pc.get('adminCode3'), pc.get('adminName3'),
+                    row[0], row[1]))
+            conn.commit()
+
+def integrate_nominatim(conn, table):
+    BASE = 'http://open.mapquestapi.com/nominatim/v1/search?format=json&q=%s&limit=1&countrycodes=%s'
+    CITIES = {}
+    c = conn.cursor()
+    for col in ["lng", "lat"]:
+        try:
+            c.execute("ALTER TABLE %s ADD COLUMN %s TEXT" % (table, col))
+        except: pass
+    c.execute("SELECT DISTINCT country_code, address, city, lng, lat FROM %s" % table)
+    def _get(query, country):
+        url = BASE % (quote(query.encode('utf-8')),
+                      quote(country.encode('utf-8')))
+        return json.load(urlopen(url))
+    for row in c:
+        if row is None:
+            break
+        if not row[0]: continue
+        if row[3] and row[4]: continue
+        query = row[1] + ", " + row[2]
+        print query.encode('utf-8')
+        data = _get(query, row[0])
+        if not len(data):
+            city = row[2].lower().strip()
+            if not city in CITIES:
+                CITIES[city] = _get(city, row[0])
+            data = CITIES[city]
+        if len(data):
+            loc = data[0]
+            print loc['lon'], loc['lat']
+            conn.execute('UPDATE %s SET lng = ?, lat = ? '
+                'WHERE country_code = ? AND address = ? AND city = ?' %
+                table, (loc['lon'], loc['lat'],
+                    row[0], row[1], row[2]))
+            conn.commit()
+
+
 if __name__ == '__main__':
     assert len(sys.argv)==3, "Usage: %s {cc,dg,corp} [sqlite-db]"
     op = sys.argv[1]
@@ -59,6 +128,8 @@ if __name__ == '__main__':
     ops = {
         'dg': integrate_departments,
         'corp': integrate_companies,
-        'cc': integrate_countries
+        'cc': integrate_countries,
+        'geo': integrate_nominatim,
+        'nuts': integrate_geocode
         }.get(op)(conn, 'fts'),
 
