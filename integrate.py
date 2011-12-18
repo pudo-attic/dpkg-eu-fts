@@ -120,6 +120,32 @@ def integrate_nominatim(conn, table):
                     row[0], row[1], row[2]))
             conn.commit()
 
+from ll2nuts import LonLat2NUTS
+def integrate_nuts(conn, table):
+    c = conn.cursor()
+    ll = LonLat2NUTS(3)
+    for col in ["nuts2"]:
+        try:
+            c.execute("ALTER TABLE %s ADD COLUMN %s TEXT" % (table, col))
+        except: pass
+    c.execute("SELECT DISTINCT country_code, lng, lat FROM %s" % table)
+    for row in c:
+        if row is None:
+            break
+        if not row[0]: continue
+        if not row[1] or not row[2]: continue
+        try:
+            print row
+            nuts = ll.ll2nuts(float(row[1]), float(row[2]), iso=row[0])
+            if not nuts.startswith(row[0]):
+                continue
+            print nuts
+            conn.execute('UPDATE %s SET nuts2 = ? WHERE lat = ? AND  '
+                'lng = ? AND country_code = ?' % table, 
+                (nuts, row[2], row[1], row[0]))
+            conn.commit()
+        except Exception, e:
+            print e
 
 if __name__ == '__main__':
     assert len(sys.argv)==3, "Usage: %s {cc,dg,corp} [sqlite-db]"
@@ -130,6 +156,6 @@ if __name__ == '__main__':
         'corp': integrate_companies,
         'cc': integrate_countries,
         'geo': integrate_nominatim,
-        'nuts': integrate_geocode
+        'nuts': integrate_nuts
         }.get(op)(conn, 'fts'),
 
