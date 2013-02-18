@@ -6,6 +6,15 @@ This is documentation on the process required to generate a valid CSV form of
 the FTS that can be imported into OpenSpending or used for more detailed
 analysis.
 
+Setting up an environment
+-------------------------
+
+To extract the data, a database needs to be available. Since SQLAlchemy is used, 
+any type of backend will be supported. Just set an environment variable like 
+this::
+  
+  export FTS_URL=postgresql:///fts
+
 
 Loading the XML source files
 ----------------------------
@@ -14,25 +23,25 @@ Download the BUDG source files in the XML format from the Commission's portal
 at http://ec.europa.eu/beneficiaries/fts/index_en.htm. OS doesn't currently 
 support multiple languages in data, so you will only want one language version.
 
-Then, load each file into the SQLite staging file::
+Then, load each file into the operational data store::
 
-  python xml2sqlite.py export_20XX_en.xml fts.db
+  python parse.py export_20XX_en.xml
 
 
-Reconciliation: EC Departments, Countries, Companies
-----------------------------------------------------
+Reconciliation: Places, Countries, Companies
+--------------------------------------------
 
 Recon stages can be run like this::
 
   # Country codes:
-  python integrate.py cc fts.db
-  # Directorates-General:
-  python integrate.py dg fts.db
+  python countries.py 
+  # Geo-coding:
+  python geo.py 
   # Companies:
-  python integrate.py corp fts.db
+  python beneficiaries.py 
 
-Companies (corp) reconciliation may potentially take a long time and much user
-interaction, so depending on the purpose this may not make sense to reproduce.
+Companies reconciliation and geo-coding may potentially take a long time, so
+depending on the purpose this may not make sense to reproduce.
 
 
 EU Budget Reference Data
@@ -43,7 +52,7 @@ to add context to the transaction, by adding in EU budget classifications.
 
 Budget codes can be applied using the appropriate script::
 
-  python budget_codes.py fts.db 2011-11-22.budget_codes.txt
+  python budget_codes.py 2011-11-22.budget_codes.txt
 
 This will also print any unknown budget code identifiers occuring in the source
 data.
