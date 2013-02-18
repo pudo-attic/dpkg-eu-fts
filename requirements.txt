@@ -1,0 +1,4 @@
+requests
+lxml
+-e git+https://github.com/gka/pyshpgeocode#egg=pyshpgeocode
+-e git+https://github.com/okfn/sqlaload.git#egg=sqlaload
